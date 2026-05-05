@@ -1,1 +1,46 @@
-(function(){Lampa.Plugins.add('radio_fixed',function(){function open(){var s=[{title:'Hit FM',url:'https://online.hitfm.ua/HitFM'},{title:'Radio ROKS',url:'https://online.radioroks.ua/RadioROKS'}];var l=Lampa.Template.get('items_list',{title:'Radio'});s.forEach(function(i){var c=Lampa.Template.get('card',{title:i.title,card_category:'UA'});c.on('hover:enter',function(){Lampa.Player.play({url:i.url,title:i.title});});l.find('.items-line').append(c);});Lampa.Select.show({container:l,onBack:function(){Lampa.Controller.toggle('main');}});}var m=$('<div class="menu__item selector"><div class="menu__ico"></div><div class="menu__text">Radio UA</div></div>');m.on('hover:enter',open);function add(){if($('.menu .menu__list').length){$('.menu .menu__list').append(m);}else{setTimeout(add,500);}}add();});})();
+(function () {
+    'use strict';
+
+    function RadioPlugin(api) {
+        this.create = function () {
+            // Список станцій (можна додавати свої посилання)
+            var stations = [
+                { title: 'Hit FM', url: 'https://online.hitfm.ua/HitFM', img: 'https://static.hitfm.ua/logo.png' },
+                { title: 'Radio ROKS', url: 'https://online.radioroks.ua/RadioROKS', img: 'https://static.radioroks.ua/logo.png' },
+                { title: 'Kiss FM', url: 'https://online.kissfm.ua/KissFM', img: 'https://static.kissfm.ua/logo.png' },
+                { title: 'Bayraktar', url: 'https://online.radiobayraktar.com.ua/RadioBayraktar', img: 'https://static.radiobayraktar.com.ua/logo.png' }
+            ];
+
+            // Створення головного екрану плагіна
+            var view = Lampa.Template.get('items_list', { title: 'Українське Радіо' });
+            
+            stations.forEach(function (station) {
+                var item = Lampa.Template.get('card', {
+                    title: station.title,
+                    card_category: 'Радіо'
+                });
+
+                item.find('.card__img').attr('src', station.img);
+                
+                item.on('hover:enter', function () {
+                    Lampa.Player.play({
+                        url: station.url,
+                        title: station.title
+                    });
+                });
+
+                view.find('.items-line').append(item);
+            });
+
+            Lampa.Select.show({
+                container: view,
+                onBack: function () {
+                    Lampa.Controller.toggle('main');
+                }
+            });
+        };
+    }
+
+    // Реєстрація плагіна в меню
+    Lampa.Plugins.add('radio_ua', RadioPlugin);
+})();
