@@ -1,75 +1,57 @@
 (function () {
     'use strict';
 
-    function RadioCustomPlugin(api) {
-        var storage_key = 'lampa_custom_radio_list';
+    Lampa.Plugins.add('radio_ua_custom', function (api) {
+        var storage_key = 'lampa_my_radio_list';
 
-        // Функція для отримання списку станцій з пам'яті
-        function getSavedStations() {
-            var saved = localStorage.getItem(storage_key);
-            return saved ? JSON.parse(saved) : [
-                { title: 'Hit FM', url: 'https://online.hitfm.ua/HitFM' },
-                { title: 'Radio ROKS', url: 'https://online.radioroks.ua/RadioROKS' }
-            ];
-        }
+        function showRadio() {
+            var stations = JSON.parse(localStorage.getItem(storage_key) || '[]');
+            if (stations.length === 0) {
+                stations = [
+                    {title: 'Hit FM', url: 'https://online.hitfm.ua/HitFM'},
+                    {title: 'Radio ROKS', url: 'https://online.radioroks.ua/RadioROKS'},
+                    {title: 'Kiss FM', url: 'https://online.kissfm.ua/KissFM'}
+                ];
+            }
 
-        // Функція для збереження нової станції
-        function saveStation(title, url) {
-            var stations = getSavedStations();
-            stations.push({ title: title, url: url });
-            localStorage.setItem(storage_key, JSON.stringify(stations));
-            Lampa.Noty.show('Станцію додано!');
-            renderAll(); // Перемалювати список
-        }
-
-        this.create = function () {
-            this.renderAll();
-        };
-
-        this.renderAll = function () {
-            var stations = getSavedStations();
-            var scroll = Lampa.Template.get('items_list', { title: 'Моє Радіо' });
+            var scroll = Lampa.Template.get('items_list', {title: 'Моє Радіо'});
             
-            // Кнопка "Додати свою станцію"
-            var add_btn = Lampa.Template.get('card', { title: 'ДОДАТИ НОВУ', card_category: 'Налаштування' });
+            var add_btn = Lampa.Template.get('card', {title: 'Додати станцію', card_category: 'Налаштування'});
             add_btn.on('hover:enter', function () {
-                // Виклик екранної клавіатури Lampa для введення назви та посилання
-                Lampa.Input.edit({
-                    title: 'Назва радіо',
-                    value: ''
-                }, function (name) {
+                Lampa.Input.edit({title: 'Назва радіо'}, function (name) {
                     if (name) {
-                        Lampa.Input.edit({
-                            title: 'URL посилання (mp3/m3u8)',
-                            value: 'http://'
-                        }, function (url) {
-                            if (url) saveStation(name, url);
+                        Lampa.Input.edit({title: 'URL посилання (mp3)', value: 'http://'}, function (url) {
+                            if (url) {
+                                stations.push({title: name, url: url});
+                                localStorage.setItem(storage_key, JSON.stringify(stations));
+                                Lampa.Noty.show('Збережено! Перезайдіть у радіо');
+                            }
                         });
                     }
                 });
             });
             scroll.find('.items-line').append(add_btn);
 
-            // Виведення списку станцій
-            stations.forEach(function (station) {
-                var item = Lampa.Template.get('card', { title: station.title, card_category: 'Радіо UA' });
+            stations.forEach(function (st) {
+                var item = Lampa.Template.get('card', {title: st.title, card_category: 'UA Radio'});
                 item.on('hover:enter', function () {
-                    Lampa.Player.play({
-                        url: station.url,
-                        title: station.title
-                    });
+                    Lampa.Player.play({url: st.url, title: st.title});
                 });
                 scroll.find('.items-line').append(item);
             });
 
             Lampa.Select.show({
                 container: scroll,
-                onBack: function () {
-                    Lampa.Controller.toggle('main');
-                }
+                onBack: function () { Lampa.Controller.toggle('main'); }
             });
-        };
-    }
+        }
 
-    Lampa.Plugins.add('custom_radio', RadioCustomPlugin);
+        var menu_item = $('<div class="menu__item selector" data-action="radio_ua">' +
+            '<div class="menu__ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="6" width="18" height="13" rx="2" stroke="white" stroke-width="2"/><circle cx="12" cy="12.5" r="3.5" stroke="white" stroke-width="2"/><path d="M7 6V4H17V6" stroke="white" stroke-width="2"/></svg></div>' +
+            '<div class="menu__text">Радіо</div>' +
+        '</div>');
+
+        menu_item.on('hover:enter', showRadio);
+        $('.menu .menu__list').append(menu_item);
+    });
 })();
